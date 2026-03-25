@@ -1,0 +1,211 @@
+using UnityEngine;
+using System.Collections;
+
+public class GamePowerups : MonoBehaviour
+{
+    [Header("References")]
+    public PlayerMovement movement;
+
+    private int playerLayer;
+    private int obstacleLayer;
+
+    [Header("High Jump")]
+    public float highJumpMultiplier = 1.8f;
+    public float highJumpDuration = 5f;
+    private Coroutine highJumpRoutine;
+
+    [Header("Double Speed")]
+    public float speedMultiplier = 2f;
+    public float speedDuration = 5f;
+    private Coroutine speedRoutine;
+    public bool isSpeedBoostActive { get; private set; }
+
+    [Header("Double Coins")]
+    public float doubleCoinsDuration = 5f;
+    private Coroutine doubleCoinsRoutine;
+    public bool isDoubleCoinsActive { get; private set; }
+
+    [Header("Shield")]
+    public float shieldDuration = 5f;
+    public GameObject shieldVisual;
+
+    private Coroutine shieldRoutine;
+    private Coroutine revivalRoutine;
+    public bool isShieldActive { get; private set; }
+
+    void Awake()
+    {
+        if (movement == null)
+            movement = GetComponent<PlayerMovement>();
+
+        playerLayer = LayerMask.NameToLayer("Player");
+        obstacleLayer = LayerMask.NameToLayer("Obstacle");
+
+    }
+
+    // high jumpu
+    public void ActivateHighJump()
+    {
+        if (highJumpRoutine != null) return;
+
+        highJumpRoutine = StartCoroutine(HighJumpRoutine());
+    }
+
+    IEnumerator HighJumpRoutine()
+    {
+        float originalJump = movement.jumpHeight;
+        movement.jumpHeight *= highJumpMultiplier;
+
+        yield return new WaitForSeconds(highJumpDuration);
+
+        movement.jumpHeight = originalJump;
+        highJumpRoutine = null;
+    }
+
+    // double speed
+    public void ActivateDoubleSpeed()
+    {
+        if (speedRoutine != null) StopCoroutine(speedRoutine);
+
+        speedRoutine = StartCoroutine(SpeedRoutine());
+    }
+
+    IEnumerator SpeedRoutine()
+    {
+        isSpeedBoostActive = true;
+        yield return new WaitForSeconds(speedDuration);
+        isSpeedBoostActive = false;
+        speedRoutine = null;
+    }
+
+    // double coins
+    public void ActivateDoubleCoins()
+    {
+        if (doubleCoinsRoutine != null) return;
+
+        doubleCoinsRoutine = StartCoroutine(DoubleCoinsRoutine());
+    }
+
+    IEnumerator DoubleCoinsRoutine()
+    {
+        isDoubleCoinsActive = true;
+
+        yield return new WaitForSeconds(doubleCoinsDuration);
+
+        isDoubleCoinsActive = false;
+        doubleCoinsRoutine = null;
+    }
+
+    // shield
+    public void ActivateShield()
+    {
+        if (shieldRoutine != null) return;
+        IgnoreObstacleCollision(true);
+
+        shieldRoutine = StartCoroutine(ShieldRoutine());
+    }
+
+    IEnumerator ShieldRoutine()
+    {
+        isShieldActive = true;
+
+        if (shieldVisual != null)
+            shieldVisual.SetActive(true);
+
+        yield return new WaitForSeconds(shieldDuration);
+
+        isShieldActive = false;
+
+        if (shieldVisual != null)
+            shieldVisual.SetActive(false);
+
+        IgnoreObstacleCollision(false);
+        shieldRoutine = null;
+    }
+
+    // invincibility sh
+    void IgnoreObstacleCollision(bool ignore)
+    {
+        Physics.IgnoreLayerCollision(playerLayer, obstacleLayer, ignore);
+    }
+
+    public void ActivateInvincibility(float duration)
+    {
+        if (revivalRoutine != null) return;
+
+        revivalRoutine = StartCoroutine(TemporaryInvincibility(duration));
+    }
+
+    IEnumerator TemporaryInvincibility(float duration)
+    {
+        IgnoreObstacleCollision(true);
+
+        float elapsed = 0;
+
+        Renderer[] renderers = GetComponentsInChildren<Renderer>();
+
+        while (elapsed < duration)
+        {
+            foreach (Renderer r in renderers)
+            {
+                if (r != null) r.enabled = !r.enabled;
+            }
+
+            yield return new WaitForSecondsRealtime(0.1f);
+            elapsed += 0.1f;
+        }
+
+        foreach (Renderer r in renderers)
+        {
+            if (r != null) r.enabled = true;
+        }
+
+        if (!isShieldActive)
+        {
+            IgnoreObstacleCollision(false);
+        }
+
+        revivalRoutine = null;
+    }
+
+    public bool IsInvincible()
+    {
+        return isShieldActive || revivalRoutine != null;
+    }
+
+    // resetting
+    public void ResetAllPowerups()
+    {
+        if (highJumpRoutine != null) { 
+            StopCoroutine(highJumpRoutine); highJumpRoutine = null; 
+        }
+
+        if (speedRoutine != null) { 
+            StopCoroutine(speedRoutine); speedRoutine = null; 
+        }
+
+        if (doubleCoinsRoutine != null) {
+            StopCoroutine(doubleCoinsRoutine); doubleCoinsRoutine = null; 
+        }
+
+        if (shieldRoutine != null) {
+            StopCoroutine(shieldRoutine); shieldRoutine = null; 
+        }
+        
+        if (revivalRoutine != null) {
+            StopCoroutine(revivalRoutine); revivalRoutine = null; 
+        }
+
+        isSpeedBoostActive = false;
+
+        movement.jumpHeight = 7f;
+
+        isDoubleCoinsActive = false;
+        isShieldActive = false;
+
+        if (shieldVisual != null) shieldVisual.SetActive(false);
+
+        IgnoreObstacleCollision(false);
+    }
+
+}

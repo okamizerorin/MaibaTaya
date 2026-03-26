@@ -14,6 +14,7 @@ public class RevivalSystem : MonoBehaviour
     float chaseTimer;
     bool chaseActive;
     Coroutine chaseTimerRoutine;
+    bool npcCaught = false;
 
     [Header("First Revive")]
     public bool firstFailUsed = false;
@@ -23,7 +24,7 @@ public class RevivalSystem : MonoBehaviour
 
     [Header("Second Revive")]
     public int maxRevives = 3;
-    public int currentRevives = 0;
+    public int currentRevives = 3;
     public float secondReviveDuration = 5f;
     public GameObject secondRevivePanel;
     public TextMeshProUGUI secondCountdownText;
@@ -52,6 +53,7 @@ public class RevivalSystem : MonoBehaviour
     public ObstaclesCollision collisionHandler;
     public GameObject gameUI; 
     public GamePowerups powerups;
+    public GameObject starterpwUI;
 
     [Header("NPC Chase")]
     public GameObject[] npcPrefabs;
@@ -117,9 +119,8 @@ public class RevivalSystem : MonoBehaviour
             yield break;
         }
 
-        if (currentRevives < maxRevives)
+        if (currentRevives > 0)
         {
-            currentRevives++;
             ShowSecondRevivePanel();
             yield break;
         }
@@ -133,6 +134,7 @@ public class RevivalSystem : MonoBehaviour
         Time.timeScale = 0f;
         gameUI.SetActive(false);
         countdownFailUI.SetActive(true);
+        starterpwUI.SetActive(false);
 
         float timer = autoReviveCountdown;
         while (timer > 0)
@@ -145,7 +147,7 @@ public class RevivalSystem : MonoBehaviour
         countdownFailUI.SetActive(false);
         gameUI.SetActive(true);
         countdownText.text = "";
-
+        
         RevivePlayerFirstPhase();
     }
 
@@ -167,6 +169,12 @@ public class RevivalSystem : MonoBehaviour
         if (activeNPC == null)
             SpawnChaseNPC();
 
+        if (activeNPC != null)
+        {
+            NPCController npc = activeNPC.GetComponent<NPCController>();
+            if (npc != null) npc.enabled = true;
+        }
+
         StartChaseTimer();
     }
 
@@ -181,7 +189,14 @@ public class RevivalSystem : MonoBehaviour
         if (secondReviveCoroutine != null)
             StopCoroutine(secondReviveCoroutine);
 
+        // always start countdown regardless of currentRevives
         secondReviveCoroutine = StartCoroutine(SecondReviveCountdown());
+
+        if (activeNPC != null)
+        {
+            NPCController npc = activeNPC.GetComponent<NPCController>();
+            if (npc != null) npc.enabled = false;
+        }
 
         UpdateReviveCounterUI();
     }
@@ -197,11 +212,12 @@ public class RevivalSystem : MonoBehaviour
             yield return null;
         }
 
-        if (!secondReviveActive)
-            yield break;
-
-        ShowFinalGameOver();
+        secondReviveActive = false;
         secondRevivePanel.SetActive(false);
+        gameUI.SetActive(true);
+        Time.timeScale = 1f;
+
+        ShowFinalGameOver(); // after countdown, always show scoring
     }
 
     public void UseReviveItem()
@@ -211,7 +227,7 @@ public class RevivalSystem : MonoBehaviour
         if (PlayerInventory.Instance.IceTubigCount > 0)
         {
             PlayerInventory.Instance.UseRevive();
-
+            currentRevives--;
             UpdateReviveCounterUI();
         }
         else
@@ -244,14 +260,23 @@ public class RevivalSystem : MonoBehaviour
             powerups.ActivateInvincibility(3f);
 
         collisionHandler.ResetFailState();
-        ResumeChaseTimer();
+
+        if (!npcCaught)
+        {
+            ResumeChaseTimer();
+        }
+
+        if (activeNPC != null)
+        {
+            NPCController npc = activeNPC.GetComponent<NPCController>();
+            if (npc != null) npc.enabled = true;
+        }
     }
 
     void UpdateReviveCounterUI()
     {
-        int remaining = maxRevives - currentRevives;
         if (reviveCounterText != null)
-            reviveCounterText.text = remaining + "/" + maxRevives;
+            reviveCounterText.text = currentRevives + "/" + maxRevives;
     }
 
 
@@ -357,7 +382,7 @@ public class RevivalSystem : MonoBehaviour
         HideChaseTimerUI();
 
         Debug.Log("CHASE WON");
-
+        npcCaught = true;
         ReturnToNormalRun();
     }
 
@@ -381,7 +406,7 @@ public class RevivalSystem : MonoBehaviour
             chaseTimerSlider.gameObject.SetActive(false);
     }
 
-    void SpawnChaseNPC()
+    public void SpawnChaseNPC()
     {
         if (playerMovement == null) return;
 

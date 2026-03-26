@@ -68,6 +68,7 @@ public class NPCController : MonoBehaviour
         DetectObstacles();
         MoveNPC();
         CheckIfCaught();
+        CheckIfPlayerPassed();
     }
 
     void SyncSpeedWithPlayer()
@@ -75,23 +76,24 @@ public class NPCController : MonoBehaviour
         if (playerRef == null) return;
 
         float baseSpeed = playerRef.currentSpeed;
-        float distance = transform.position.z - playerRef.transform.position.z;
 
-        // rubber banding, should tweak it i think or tanggalin completely
-        if (distance > 20f)
+        // tinanggal q rubber banding
+        currentSpeed = isBoosting ? baseSpeed * 1.05f : baseSpeed;
+    }
+
+    void CheckIfPlayerPassed()
+    {
+        if (playerRef == null) return;
+
+        if (transform.position.z < playerRef.transform.position.z)
         {
-            // slows down so the player can catch up
-            currentSpeed = baseSpeed * 0.9f;
-        }
-        else if (distance < 8f)
-        {
-            // speed up to stay ahead
-            currentSpeed = baseSpeed * 1.1f;
-        }
-        else
-        {
-            // match the player.
-            currentSpeed = isBoosting ? baseSpeed * 1.05f : baseSpeed;
+            // if malagpasan ng player
+            RevivalSystem revival = RevivalSystem.Instance;
+            if (revival != null)
+            {
+                Destroy(gameObject);
+                revival.SpawnChaseNPC(); 
+            }
         }
     }
 

@@ -53,7 +53,9 @@ public class CharacterSystem : MonoBehaviour
         PlayerPrefs.SetInt("EquippedCharacter", selectedCharacterIndex);
         PlayerPrefs.Save();
 
-        preview.RefreshUI();
+        // always refresh preview panel
+        if (preview != null)
+            preview.RefreshUI();
 
         if (preview.sfxSource != null && preview.equipVoices.Count > index)
         {

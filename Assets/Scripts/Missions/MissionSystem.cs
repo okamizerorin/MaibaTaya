@@ -226,7 +226,7 @@ public class MissionSystem : MonoBehaviour
         return true;
     }
 
-    void ShowDailyRewardBox()
+    public void ShowDailyRewardBox()
     {
         DailyRewardBox box = FindObjectOfType<DailyRewardBox>();
         if (box != null)

@@ -12,6 +12,7 @@ public class DailyRewardBox : MonoBehaviour
 
     public GameObject idleBag;    
     public GameObject resultPanel;
+    public GameObject menuPanel;
 
     [Header("Result UI")]
     public TMP_Text coinsText;
@@ -32,6 +33,7 @@ public class DailyRewardBox : MonoBehaviour
     public void ShowRewardPanel()
     {
         panel.SetActive(true);
+        menuPanel.SetActive(false);
 
         opened = false;
         canClose = false;
@@ -54,7 +56,7 @@ public class DailyRewardBox : MonoBehaviour
             idleBag.SetActive(false);
 
             bagAnimator.gameObject.SetActive(true);
-            bagAnimator.Play("RewardBox");
+            bagAnimator.Play("RewardBag");
 
             float animLength = bagAnimator.GetCurrentAnimatorStateInfo(0).length;
             Invoke(nameof(ShowRewards), animLength);
@@ -101,8 +103,8 @@ public class DailyRewardBox : MonoBehaviour
         // ui
         resultPanel.SetActive(true);
 
-        coinsText.text = "+" + coins;
-        iceTubigText.text = "+" + iceTubig;
+        coinsText.text = "+" + coins + " Coins!";
+        iceTubigText.text = "+" + iceTubig + " Ice Tubig!";
         starterText.text = starterName;
 
         resultPanel.transform.localScale = Vector3.zero;
@@ -114,5 +116,6 @@ public class DailyRewardBox : MonoBehaviour
     void ClosePanel()
     {
         panel.SetActive(false);
+        menuPanel.SetActive(true);
     }
 }

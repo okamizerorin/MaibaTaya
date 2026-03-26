@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using TMPro;
+using UnityEngine.UI;
 
 public class CharacterUnlockSystem : MonoBehaviour
 {
@@ -12,10 +13,11 @@ public class CharacterUnlockSystem : MonoBehaviour
     public GameObject unlockPanel;
     public Transform previewPoint;
     public List<GameObject> characterPrefabs;
-
     public TextMeshProUGUI unlockNameText;
+    public Button nextButton; // button to advance to next unlock
 
     GameObject currentPreview;
+    Queue<int> unlockQueue = new Queue<int>();
 
     void Awake()
     {
@@ -24,12 +26,10 @@ public class CharacterUnlockSystem : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-
         Instance = this;
         DontDestroyOnLoad(gameObject);
     }
 
-    // savee
     public bool IsUnlocked(int index)
     {
         return PlayerPrefs.GetInt(UNLOCK_KEY + index, index == 0 ? 1 : 0) == 1;
@@ -41,9 +41,10 @@ public class CharacterUnlockSystem : MonoBehaviour
         PlayerPrefs.Save();
     }
 
-    public void CheckForUnlocks()
+    public List<int> CheckForUnlocks()
     {
-        if (CharacterDatabase.Instance == null) return;
+        List<int> newlyUnlocked = new List<int>();
+        if (CharacterDatabase.Instance == null) return newlyUnlocked;
 
         int bestDistance = HighScoreStorage.Instance != null ? HighScoreStorage.Instance.HighScore : 0;
         int totalCoins = CoinStorage.Instance != null ? CoinStorage.Instance.Coins : 0;
@@ -56,24 +57,48 @@ public class CharacterUnlockSystem : MonoBehaviour
 
             var data = dataList[i];
 
-            if (data.unlockedByDefault)
+            if (data.unlockedByDefault ||
+                (bestDistance >= data.requiredDistance && totalCoins >= data.requiredTotalCoins))
             {
                 UnlockCharacter(i);
-                continue;
+                newlyUnlocked.Add(i);
             }
+        }
 
-            if (bestDistance >= data.requiredDistance &&
-                totalCoins >= data.requiredTotalCoins)
-            {
-                UnlockCharacter(i);
-                ShowUnlockPopup(i);
-                break;
-            }
+        if (newlyUnlocked.Count > 0)
+            ShowUnlocksSequentially(newlyUnlocked);
+
+        return newlyUnlocked;
+    }
+
+    void ShowUnlocksSequentially(List<int> newUnlocks)
+    {
+        unlockQueue.Clear();
+        foreach (var i in newUnlocks)
+            unlockQueue.Enqueue(i);
+
+        ShowNextUnlock();
+    }
+
+    void ShowNextUnlock()
+    {
+        if (unlockQueue.Count == 0)
+        {
+            ClosePopup();
+            return;
+        }
+
+        int index = unlockQueue.Dequeue();
+        ShowUnlockPopup(index);
+
+        if (nextButton != null)
+        {
+            nextButton.onClick.RemoveAllListeners();
+            nextButton.onClick.AddListener(ShowNextUnlock);
         }
     }
 
-    // panel unlock
-    void ShowUnlockPopup(int index)
+    public void ShowUnlockPopup(int index)
     {
         if (unlockPanel == null || previewPoint == null || CharacterDatabase.Instance == null) return;
 
@@ -96,7 +121,6 @@ public class CharacterUnlockSystem : MonoBehaviour
     public void ClosePopup()
     {
         unlockPanel.SetActive(false);
-
         if (currentPreview != null)
             Destroy(currentPreview);
     }

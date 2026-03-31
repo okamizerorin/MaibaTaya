@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 [RequireComponent(typeof(CharacterController))]
 public class NPCController : MonoBehaviour
@@ -68,7 +69,7 @@ public class NPCController : MonoBehaviour
         DetectObstacles();
         MoveNPC();
         CheckIfCaught();
-        CheckIfPlayerPassed();
+        CheckIfPlayerPassed(); 
     }
 
     void SyncSpeedWithPlayer()
@@ -77,27 +78,42 @@ public class NPCController : MonoBehaviour
 
         float baseSpeed = playerRef.currentSpeed;
 
-        // tinanggal q rubber banding
-        currentSpeed = isBoosting ? baseSpeed * 1.05f : baseSpeed;
+        float targetSpeed = baseSpeed * 0.97f;
+
+        if (isBoosting)
+        {
+            targetSpeed = baseSpeed * 1.05f;
+        }
+
+        currentSpeed = Mathf.Lerp(currentSpeed, targetSpeed, Time.deltaTime * 3f);
     }
 
     void CheckIfPlayerPassed()
     {
         if (playerRef == null) return;
 
-        if (transform.position.z < playerRef.transform.position.z)
+        if (transform.position.z < playerRef.transform.position.z - 2f)
         {
-            // if malagpasan ng player
-            RevivalSystem revival = RevivalSystem.Instance;
-            if (revival != null)
+            if (RevivalSystem.Instance != null)
             {
-                Destroy(gameObject);
-                revival.SpawnChaseNPC(); 
+                RevivalSystem.Instance.RespawnNPCAfterDelay();
             }
+
+            Destroy(gameObject);
         }
     }
 
-    // movements
+    IEnumerator RespawnAhead()
+    {
+        yield return new WaitForSeconds(1.2f);
+
+        if (RevivalSystem.Instance != null)
+        {
+            RevivalSystem.Instance.SpawnChaseNPC();
+        }
+    }
+
+
     void MoveNPC()
     {
         targetPositionX = roadCenterX + (currentLane - 1) * laneDistance;
@@ -135,7 +151,6 @@ public class NPCController : MonoBehaviour
         controller.Move(moveDir * Time.deltaTime);
     }
 
-    // more detection
     void DetectObstacles()
     {
         if (isChangingLane) return;
@@ -148,7 +163,7 @@ public class NPCController : MonoBehaviour
 
         if (!hitSomething)
         {
-            Vector3 lowOrigin = transform.position + Vector3.up * 0.2f; // Check near feet
+            Vector3 lowOrigin = transform.position + Vector3.up * 0.2f;
             hitSomething = Physics.SphereCast(lowOrigin, 0.2f, Vector3.forward, out hit, dynamicDistance, obstacleLayer);
         }
 
@@ -178,7 +193,6 @@ public class NPCController : MonoBehaviour
         float npcFeetY = transform.position.y;
 
         float obstacleHeight = obstacle.bounds.size.y;
-        float obstacleTop = obstacle.bounds.max.y;
         float obstacleBottom = obstacle.bounds.min.y;
 
         float dist = Vector3.Distance(transform.position, obstacle.transform.position);
@@ -189,7 +203,6 @@ public class NPCController : MonoBehaviour
             if (timeToHit < 0.9f && controller.isGrounded)
             {
                 Jump();
-                Debug.Log("NPC: Low obstacle - JUMP");
                 return;
             }
         }
@@ -197,18 +210,10 @@ public class NPCController : MonoBehaviour
         if (obstacleBottom > npcFeetY + 1.0f)
         {
             Slide();
-            Debug.Log("NPC: Floating obstacle - SLIDE");
             return;
         }
 
         TryChangeLaneRandomly();
-        Debug.Log("NPC: Big obstacle - SWERVE");
-    }
-
-    IEnumerator WaitAndJump(float delay)
-    {
-        if (delay > 0) yield return new WaitForSeconds(delay);
-        Jump();
     }
 
     void Jump()
@@ -220,7 +225,7 @@ public class NPCController : MonoBehaviour
     void Slide()
     {
         if (verticalVelocity > 0f) return;
-        if (!isSliding && controller.isGrounded) 
+        if (!isSliding && controller.isGrounded)
             StartCoroutine(SlideRoutine());
     }
 
@@ -239,19 +244,25 @@ public class NPCController : MonoBehaviour
         isSliding = false;
     }
 
-    // laning nya
     bool TryChangeLaneRandomly()
     {
         int nextLane = currentLane;
 
+        List<int> validLanes = new List<int>();
+
         if (currentLane == 0 || currentLane == 2)
         {
-            nextLane = 1;
+            validLanes.Add(1);
         }
         else
         {
-            if (IsLaneClear(0)) nextLane = 0;
-            else if (IsLaneClear(2)) nextLane = 2;
+            if (IsLaneClear(0)) validLanes.Add(0);
+            if (IsLaneClear(2)) validLanes.Add(2);
+        }
+
+        if (validLanes.Count > 0)
+        {
+            nextLane = validLanes[Random.Range(0, validLanes.Count)];
         }
 
         if (nextLane != currentLane)
@@ -275,6 +286,11 @@ public class NPCController : MonoBehaviour
         if (playerRef == null || !this.enabled) return;
 
         float distance = Vector3.Distance(transform.position, playerRef.transform.position);
+
+        if (distance < 4f)
+        {
+            playerRef.currentSpeed *= 1.02f;
+        }
 
         if (distance < 2.5f)
         {

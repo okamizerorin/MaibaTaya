@@ -424,7 +424,12 @@ public class RevivalSystem : MonoBehaviour
         int selectedLane = Random.Range(0, 3);
 
         float targetX = roadCenterX + (selectedLane - 1) * laneWidth;
-        float spawnZ = playerMovement.transform.position.z + npcSpawnDistance;
+        float speedPercent = playerMovement.currentSpeed / 45f;
+
+        float dynamicDistance = Mathf.Lerp(16f, 24f, speedPercent);
+        dynamicDistance += Random.Range(-2f, 2f);
+
+        float spawnZ = playerMovement.transform.position.z + dynamicDistance;
 
         Vector3 spawnPos = new Vector3(targetX, roadY + 0.05f, spawnZ);
     
@@ -548,6 +553,18 @@ public class RevivalSystem : MonoBehaviour
             anim.ResetTrigger("Stagger");
             anim.Play("Movement", 0, 0f);
         }
+    }
+
+    public void RespawnNPCAfterDelay()
+    {
+        StartCoroutine(RespawnNPCRoutine());
+    }
+
+    IEnumerator RespawnNPCRoutine()
+    {
+        yield return new WaitForSeconds(1.8f);
+
+        SpawnChaseNPC();
     }
 
     public void RetryGame()

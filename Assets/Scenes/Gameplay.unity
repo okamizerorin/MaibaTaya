@@ -3130,7 +3130,7 @@ MonoBehaviour:
   countdownText: {fileID: 1935128409}
   countdownFailUI: {fileID: 1109560632}
   maxRevives: 3
-  currentRevives: 1
+  currentRevives: 3
   secondReviveDuration: 10
   secondRevivePanel: {fileID: 578852823}
   secondCountdownText: {fileID: 88148758}
@@ -3154,7 +3154,7 @@ MonoBehaviour:
   - {fileID: 1962294260796341037, guid: bdbf8f7de81504d4488f34e0e896573f, type: 3}
   - {fileID: 9005259390091412329, guid: 51e815dd4bf6d64449100b07d42b6d42, type: 3}
   - {fileID: 2502900226143163426, guid: e7e3b309ee206bd45a6dbf505d1f1999, type: 3}
-  npcSpawnDistance: 13
+  npcSpawnDistance: 18
   platformLayer:
     serializedVersion: 2
     m_Bits: 256
@@ -3329,7 +3329,7 @@ MonoBehaviour:
   startBaseSpacing: 30
   endBaseSpacing: 20
   patternGap: 20
-  globalXOffset: 0
+  globalXOffset: 0.3
   player: {fileID: 1591595418}
   difficultyDistanceStep: 200
   maxDifficulty: 5
@@ -6079,12 +6079,12 @@ MonoBehaviour:
   swipeThreshold: 50
   laneDistance: 3
   sideSpeed: 15
-  startSpeed: 13
-  maxSpeed: 35
+  startSpeed: 17
+  maxSpeed: 45
   speedIncreaseRate: 0.18
   currentSpeed: 0
   distanceTraveled: 0
-  jumpHeight: 10
+  jumpHeight: 11
   slideDuration: 1
   slideHeight: 1
   slideCenterY: 0.5
@@ -6196,11 +6196,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GamePowerups
   movement: {fileID: 1591595413}
   highJumpMultiplier: 1.8
-  highJumpDuration: 7
+  highJumpDuration: 10
   speedMultiplier: 3
-  speedDuration: 7
-  doubleCoinsDuration: 5
-  shieldDuration: 7
+  speedDuration: 10
+  doubleCoinsDuration: 10
+  shieldDuration: 10
   shieldVisual: {fileID: 0}
 --- !u!114 &1591595421
 MonoBehaviour:

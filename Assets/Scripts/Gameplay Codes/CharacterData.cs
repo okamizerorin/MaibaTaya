@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class CharacterData : MonoBehaviour
 {
-    public string characterID; // model name yan
+    public string characterID;
     public GameObject modelPrefab; 
     public Animator animator;
 }

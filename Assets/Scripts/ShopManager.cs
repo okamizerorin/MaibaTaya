@@ -97,12 +97,27 @@ public class ShopManager : MonoBehaviour
         currentItem = item;
         currentAmount = 1;
 
-        iceTubigPanel.SetActive(item == ShopItem.IceTubig);
-        shieldPanel.SetActive(item == ShopItem.ShieldStarter);
-        speedPanel.SetActive(item == ShopItem.SpeedStarter);
-        duoCoinPanel.SetActive(item == ShopItem.DoubleCoinsStarter);
+        AnimatePanel(iceTubigPanel, item == ShopItem.IceTubig);
+        AnimatePanel(shieldPanel, item == ShopItem.ShieldStarter);
+        AnimatePanel(speedPanel, item == ShopItem.SpeedStarter);
+        AnimatePanel(duoCoinPanel, item == ShopItem.DoubleCoinsStarter);
 
         RefreshUI(item);
+    }
+
+    //dotween animation
+    void AnimatePanel(GameObject panel, bool shouldShow)
+    {
+        var anim = panel.GetComponent<UIAnimations>();
+
+        if (shouldShow)
+        {
+            anim.AnimateIn();
+        }
+        else if (panel.activeSelf)
+        {
+            anim.AnimateOut();
+        }
     }
 
     public void ShowIceTubigPanel() 
@@ -200,8 +215,10 @@ public class ShopManager : MonoBehaviour
         if (confirmationPanel != null)
         {
             confirmationText.text = $"You bought {amount} x {itemName}!";
-            confirmationPanel.SetActive(true);
-            // optional: hide after 1.5s
+
+            var anim = confirmationPanel.GetComponent<UIAnimations>();
+            anim.AnimateIn();
+
             StartCoroutine(HideConfirmationRoutine(1.5f));
         }
     }
@@ -209,7 +226,11 @@ public class ShopManager : MonoBehaviour
     IEnumerator HideConfirmationRoutine(float delay)
     {
         yield return new WaitForSeconds(delay);
+
         if (confirmationPanel != null)
-            confirmationPanel.SetActive(false);
+        {
+            var anim = confirmationPanel.GetComponent<UIAnimations>();
+            anim.AnimateOut();
+        }
     }
 }

@@ -5,6 +5,7 @@ public class GamePowerups : MonoBehaviour
 {
     [Header("References")]
     public PlayerMovement movement;
+    public PowerupUIManager uiManager;
 
     private int playerLayer;
     private int obstacleLayer;
@@ -40,15 +41,17 @@ public class GamePowerups : MonoBehaviour
 
         playerLayer = LayerMask.NameToLayer("Player");
         obstacleLayer = LayerMask.NameToLayer("Obstacle");
-
     }
 
-    // high jumpu
+    // jumpp
     public void ActivateHighJump()
     {
-        if (highJumpRoutine != null) return;
+        if (highJumpRoutine != null)
+            StopCoroutine(highJumpRoutine);
 
         highJumpRoutine = StartCoroutine(HighJumpRoutine());
+
+        uiManager?.Show(PowerupType.HighJump, highJumpDuration);
     }
 
     IEnumerator HighJumpRoutine()
@@ -62,28 +65,36 @@ public class GamePowerups : MonoBehaviour
         highJumpRoutine = null;
     }
 
-    // double speed
+    // speedup
     public void ActivateDoubleSpeed()
     {
-        if (speedRoutine != null) StopCoroutine(speedRoutine);
+        if (speedRoutine != null)
+            StopCoroutine(speedRoutine);
 
         speedRoutine = StartCoroutine(SpeedRoutine());
+
+        uiManager?.Show(PowerupType.DoubleSpeed, speedDuration);
     }
 
     IEnumerator SpeedRoutine()
     {
         isSpeedBoostActive = true;
+
         yield return new WaitForSeconds(speedDuration);
+
         isSpeedBoostActive = false;
         speedRoutine = null;
     }
 
-    // double coins
+    // double barya
     public void ActivateDoubleCoins()
     {
-        if (doubleCoinsRoutine != null) return;
+        if (doubleCoinsRoutine != null)
+            StopCoroutine(doubleCoinsRoutine);
 
         doubleCoinsRoutine = StartCoroutine(DoubleCoinsRoutine());
+
+        uiManager?.Show(PowerupType.DoubleCoins, doubleCoinsDuration);
     }
 
     IEnumerator DoubleCoinsRoutine()
@@ -96,13 +107,17 @@ public class GamePowerups : MonoBehaviour
         doubleCoinsRoutine = null;
     }
 
-    // shield
+    // shieldo
     public void ActivateShield()
     {
-        if (shieldRoutine != null) return;
+        if (shieldRoutine != null)
+            StopCoroutine(shieldRoutine);
+
         IgnoreObstacleCollision(true);
 
         shieldRoutine = StartCoroutine(ShieldRoutine());
+
+        uiManager?.Show(PowerupType.Shield, shieldDuration);
     }
 
     IEnumerator ShieldRoutine()
@@ -123,12 +138,12 @@ public class GamePowerups : MonoBehaviour
         shieldRoutine = null;
     }
 
-    // invincibility sh
     void IgnoreObstacleCollision(bool ignore)
     {
         Physics.IgnoreLayerCollision(playerLayer, obstacleLayer, ignore);
     }
 
+    // invincibility s
     public void ActivateInvincibility(float duration)
     {
         if (revivalRoutine != null) return;
@@ -141,7 +156,6 @@ public class GamePowerups : MonoBehaviour
         IgnoreObstacleCollision(true);
 
         float elapsed = 0;
-
         Renderer[] renderers = GetComponentsInChildren<Renderer>();
 
         while (elapsed < duration)
@@ -161,9 +175,7 @@ public class GamePowerups : MonoBehaviour
         }
 
         if (!isShieldActive)
-        {
             IgnoreObstacleCollision(false);
-        }
 
         revivalRoutine = null;
     }
@@ -173,39 +185,30 @@ public class GamePowerups : MonoBehaviour
         return isShieldActive || revivalRoutine != null;
     }
 
-    // resetting
+    // reset
     public void ResetAllPowerups()
     {
-        if (highJumpRoutine != null) { 
-            StopCoroutine(highJumpRoutine); highJumpRoutine = null; 
-        }
+        if (highJumpRoutine != null) StopCoroutine(highJumpRoutine);
+        if (speedRoutine != null) StopCoroutine(speedRoutine);
+        if (doubleCoinsRoutine != null) StopCoroutine(doubleCoinsRoutine);
+        if (shieldRoutine != null) StopCoroutine(shieldRoutine);
+        if (revivalRoutine != null) StopCoroutine(revivalRoutine);
 
-        if (speedRoutine != null) { 
-            StopCoroutine(speedRoutine); speedRoutine = null; 
-        }
-
-        if (doubleCoinsRoutine != null) {
-            StopCoroutine(doubleCoinsRoutine); doubleCoinsRoutine = null; 
-        }
-
-        if (shieldRoutine != null) {
-            StopCoroutine(shieldRoutine); shieldRoutine = null; 
-        }
-        
-        if (revivalRoutine != null) {
-            StopCoroutine(revivalRoutine); revivalRoutine = null; 
-        }
+        highJumpRoutine = null;
+        speedRoutine = null;
+        doubleCoinsRoutine = null;
+        shieldRoutine = null;
+        revivalRoutine = null;
 
         isSpeedBoostActive = false;
-
-        movement.jumpHeight = 7f;
-
         isDoubleCoinsActive = false;
         isShieldActive = false;
 
-        if (shieldVisual != null) shieldVisual.SetActive(false);
+        movement.jumpHeight = 7f;
+
+        if (shieldVisual != null)
+            shieldVisual.SetActive(false);
 
         IgnoreObstacleCollision(false);
     }
-
 }

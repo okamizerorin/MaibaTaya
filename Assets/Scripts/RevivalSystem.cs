@@ -54,6 +54,7 @@ public class RevivalSystem : MonoBehaviour
     public GameObject gameUI; 
     public GamePowerups powerups;
     public GameObject starterpwUI;
+    public GameObject platformNameUI;
 
     [Header("NPC Chase")]
     public GameObject[] npcPrefabs;
@@ -135,6 +136,7 @@ public class RevivalSystem : MonoBehaviour
         gameUI.SetActive(false);
         countdownFailUI.SetActive(true);
         starterpwUI.SetActive(false);
+        platformNameUI.SetActive(false);
 
         float timer = autoReviveCountdown;
         while (timer > 0)
@@ -146,6 +148,7 @@ public class RevivalSystem : MonoBehaviour
 
         countdownFailUI.SetActive(false);
         gameUI.SetActive(true);
+        platformNameUI.SetActive(true);
         countdownText.text = "";
         
         RevivePlayerFirstPhase();
@@ -184,12 +187,12 @@ public class RevivalSystem : MonoBehaviour
         Time.timeScale = 0f;
         gameUI.SetActive(false);
         secondRevivePanel.SetActive(true);
+        platformNameUI.SetActive(false);
         secondReviveActive = true;
 
         if (secondReviveCoroutine != null)
             StopCoroutine(secondReviveCoroutine);
 
-        // always start countdown regardless of currentRevives
         secondReviveCoroutine = StartCoroutine(SecondReviveCountdown());
 
         if (activeNPC != null)
@@ -215,9 +218,10 @@ public class RevivalSystem : MonoBehaviour
         secondReviveActive = false;
         secondRevivePanel.SetActive(false);
         gameUI.SetActive(true);
+        platformNameUI.SetActive(true);
         Time.timeScale = 1f;
 
-        ShowFinalGameOver(); // after countdown, always show scoring
+        ShowFinalGameOver();
     }
 
     public void UseReviveItem()
@@ -232,12 +236,13 @@ public class RevivalSystem : MonoBehaviour
         }
         else
         {
-            // implement later, medj complicated for the time (buy in game)
+            // implement later maybe, medj complicated for the time (buy in game)
             /*
             if (ShopManager.Instance != null)
             {
                 ShopManager.Instance.ShowPanel(ShopManager.ShopItem.IceTubig);
             }
+            basically show ice tubig buy panel
             */
 
             return;
@@ -286,6 +291,7 @@ public class RevivalSystem : MonoBehaviour
         Time.timeScale = 0f;
         gameUI.SetActive(false);
         finalGameOverPanel.SetActive(true);
+        platformNameUI.SetActive(false);
 
         int runCoins = CoinCollect.Instance.coins;
         int distance = playerMovement.DistanceInMeters();
@@ -406,6 +412,7 @@ public class RevivalSystem : MonoBehaviour
             chaseTimerSlider.gameObject.SetActive(false);
     }
 
+    // spawning npc
     public void SpawnChaseNPC()
     {
         if (playerMovement == null) return;

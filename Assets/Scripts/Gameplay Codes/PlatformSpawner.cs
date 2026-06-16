@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Collections;
+using DG.Tweening;
 
 public class PlatformSpawner : MonoBehaviour
 {
@@ -30,6 +32,22 @@ public class PlatformSpawner : MonoBehaviour
     private int currentRoadIndex = 0;
     private float roadTimer = 0f;
     private bool triggerBonusNext = false;
+
+    [Header("Road UI")]
+    public CanvasGroup road0UI;
+    public CanvasGroup road1UI;
+    public CanvasGroup road2UI;
+    public CanvasGroup road3UI;
+    public CanvasGroup bonusRoadUI;
+
+    public float firstRoadDelay = 2f;
+    public float otherRoadDelay = 4f;
+
+    bool road0Shown;
+    bool road1Shown;
+    bool road2Shown;
+    bool road3Shown;
+    bool bonusShown;
 
     void Start()
     {
@@ -87,12 +105,62 @@ public class PlatformSpawner : MonoBehaviour
 
         SpawnSpecificPlatform(prefabToSpawn, false);
 
+        //ui platform namee, level switch label
+        if (currentRoadIndex == 0 && !road0Shown)
+        {
+            road0Shown = true;
+            StartCoroutine(ShowRoadUI(road0UI, firstRoadDelay));
+        }
+
+        if (currentRoadIndex == 1 && !road1Shown)
+        {
+            road1Shown = true;
+            StartCoroutine(ShowRoadUI(road1UI, otherRoadDelay));
+        }
+
+        if (currentRoadIndex == 2 && !road2Shown)
+        {
+            road2Shown = true;
+            StartCoroutine(ShowRoadUI(road2UI, otherRoadDelay));
+        }
+
+        if (currentRoadIndex == 3 && !road3Shown)
+        {
+            road3Shown = true;
+            StartCoroutine(ShowRoadUI(road3UI, otherRoadDelay));
+        }
+
+        if (isBonusRoad && !bonusShown)
+        {
+            bonusShown = true;
+            StartCoroutine(ShowRoadUI(bonusRoadUI, otherRoadDelay));
+        }
+
         if (isBonusRoad)
         {
             triggerBonusNext = false;
             currentRoadIndex = 0;
             roadTimer = 0f;
         }
+    }
+
+    //ui coroutine
+    IEnumerator ShowRoadUI(CanvasGroup ui, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+
+        ui.gameObject.SetActive(true);
+        ui.alpha = 0f;
+
+        Sequence seq = DOTween.Sequence();
+
+        seq.Append(ui.DOFade(1f, 0.5f));
+        seq.AppendInterval(2f);
+        seq.Append(ui.DOFade(0f, 0.5f));
+
+        yield return seq.WaitForCompletion();
+
+        ui.gameObject.SetActive(false);
     }
 
     void SpawnSpecificPlatform(GameObject prefab, bool isFirstPlatform)

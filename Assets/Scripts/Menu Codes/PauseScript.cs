@@ -6,12 +6,14 @@ public class PauseScript : MonoBehaviour
 
     [SerializeField] GameObject pausePanel;
     [SerializeField] GameObject gameUI;
+    [SerializeField] GameObject platformNameUI;
 
     public void PauseGame()
     {
         pausePanel.SetActive(true);
         Time.timeScale = 0;
         gameUI.SetActive(false);
+        platformNameUI.SetActive(false);
     }
 
     public void ResumeGame()
@@ -19,12 +21,7 @@ public class PauseScript : MonoBehaviour
         pausePanel.SetActive(false);
         Time.timeScale = 1;
         gameUI.SetActive(true);
-    }
-
-    public void HomeMenu()
-    {
-        SceneManager.LoadScene("Main Menu");
-        Time.timeScale = 1;
+        platformNameUI.SetActive(true);
     }
 
     public void RetryGame()
